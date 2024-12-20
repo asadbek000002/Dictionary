@@ -1,9 +1,11 @@
-version: '3'
+version: '3.8'
 
 services:
   web:
     build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/Lugat
       - static_volume:/Lugat/staticfiles
@@ -14,13 +16,11 @@ services:
       - db_lugat
 
   db_lugat:
-    image: postgres:latest  # PostgreSQL uchun rasm
+    image: postgres:latest  # PostgreSQL rasmi
     environment:
-      POSTGRES_DB: lugat_db  # Django'dagi DATABASES sozlamasidagi NAME
-      POSTGRES_USER: lugat_user  # DATABASES sozlamasidagi USER
-      POSTGRES_PASSWORD: lugat_password  # DATABASES sozlamasidagi PASSWORD
-    ports:
-      - "5434:5432"
+      POSTGRES_DB: lugat_db  # DATABASES'dagi NAME
+      POSTGRES_USER: lugat_user  # DATABASES'dagi USER
+      POSTGRES_PASSWORD: lugat_password  # DATABASES'dagi PASSWORD
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
