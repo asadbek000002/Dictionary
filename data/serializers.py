@@ -1,25 +1,5 @@
 from rest_framework import serializers
-from .models import Text, Suffix, News, UsefulLink
-
-
-class TextSearchResultSerializer(serializers.Serializer):
-    word = serializers.CharField()
-    start_idx = serializers.IntegerField()
-    end_idx = serializers.IntegerField()
-
-
-class TextSerializer(serializers.ModelSerializer):
-    matches = TextSearchResultSerializer(many=True)
-
-    class Meta:
-        model = Text
-        fields = ['id', 'content', 'matches']
-
-
-class SuffixSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Suffix
-        fields = ['suffix', 'description']
+from .models import Text, Suffix, News, UsefulLink, Employees
 
 
 # News
@@ -30,9 +10,28 @@ class NewsListSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'image', 'created_at']
 
 
-# Havola
+class NewsDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = ['id', 'title', 'image', 'text', 'created_at']
+
+
+# UsefulLink
 
 class UsefulLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsefulLink
         fields = ['id', 'title', 'image', 'link']
+
+
+class UsefulLinkDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsefulLink
+        fields = ['id', 'title', 'image', 'text', 'link']
+
+# Employees
+
+class EmployeesListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employees
+        fields = ['id', 'full_name', 'image', 'info_text', 'degree', 'position', 'order']

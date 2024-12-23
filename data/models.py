@@ -35,7 +35,6 @@ class Text(models.Model):
         verbose_name = "Text"
         verbose_name_plural = "Texts"
 
-
     def __str__(self):
         return self.content[:50]  # Matnning birinchi 50 belgisini ko'rsatadi
 
@@ -63,7 +62,6 @@ class News(models.Model):
         verbose_name = "New"
         verbose_name_plural = "News"
 
-
     def __str__(self):
         return self.title
 
@@ -79,7 +77,6 @@ class UsefulLink(models.Model):
         verbose_name = "Useful Link"
         verbose_name_plural = "Useful Links"
 
-
     def __str__(self):
         return self.title
 
@@ -90,8 +87,17 @@ class Employees(models.Model):
     info_text = models.TextField(max_length=10000)
     degree = models.CharField(max_length=250)
     position = models.CharField(max_length=250)
+    order = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class SearchHistory(models.Model):
+    word = models.ForeignKey(Words, on_delete=models.SET_NULL, null=True,)
+    missing_word = models.CharField(max_length=250)
+    count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
+    def __str__(self):
+        if self.word:
+            return f"{self.word.name} - {self.count} ta qidirilgan"
+        return f"{self.missing_word} - {self.count} ta qidirilgan"

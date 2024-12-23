@@ -3,25 +3,20 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
-from .models import Text, Suffix, News, UsefulLink
-from .serializers import TextSerializer, SuffixSerializer, NewsListSerializer, UsefulLinkSerializer
+from django.db.models import Q, F
+from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory
+from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
+    EmployeesListSerializer
 
 
-class SearchPagination(PageNumberPagination):
-    page_size = 8  # Har sahifada nechta natija bo'lishi kerak
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
-class NewsPagination(PageNumberPagination):
-    page_size = 10  # Har bir sahifada 10 ta yangilik
+class Pagination(PageNumberPagination):
+    page_size = 10  # Har sahifada nechta natija bo'lishi kerak
     page_size_query_param = 'page_size'
     max_page_size = 100
 
 
 class SearchAndSuffixAPIView(APIView):
-    pagination_class = SearchPagination
+    pagination_class = Pagination
 
     def get_suffix_info(self, word):
         """
@@ -56,6 +51,7 @@ class SearchAndSuffixAPIView(APIView):
         for word in words:
             start_idx = text.content.lower().find(word.lower())
             end_idx = start_idx + len(word)
+            # word_count += 1
 
             if search_type == "token" and word.lower().startswith(prefix):
                 # Token qidiruvi: prefix bilan boshlanadigan so'zlarni tekshirish
@@ -71,8 +67,8 @@ class SearchAndSuffixAPIView(APIView):
             elif search_type == "lemma" and word.lower() == prefix:
                 matches.append({
                     "word": word,
-                    "start_idx": start_idx,
-                    "end_idx": end_idx,
+                    # "start_idx": start_idx,
+                    # "end_idx": end_idx,
                 })
 
         # Agar mosliklar bo'lmasa, hech qanday natija qaytarmaymiz
@@ -82,7 +78,7 @@ class SearchAndSuffixAPIView(APIView):
         return {
             "id": text.id,
             "content": text.content,
-            "matches": matches,
+            "matches": matches
         }
 
     def get(self, request):
@@ -91,6 +87,7 @@ class SearchAndSuffixAPIView(APIView):
         """
         prefix = request.GET.get('prefix', '').lower()  # Qidiruv so'zi
         search_type = request.GET.get('search_type', '').lower()  # Qidiruv turi
+        text_id = request.GET.get('text_id', None)
 
         # Agar qidiruv so'zi bo'lmasa, hech qanday xato qaytarmasdan bo'sh natija
         if not prefix or not search_type:
@@ -100,7 +97,22 @@ class SearchAndSuffixAPIView(APIView):
             return Response({"error": "search_type faqat 'token' yoki 'lemma' bo'lishi mumkin."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        texts = Text.objects.filter(content__icontains=prefix)
+        if prefix:
+            save_search_history(prefix)  # Qidiruv so'zini saqlash
+
+        # Agar bitta textni olishni xohlasangiz
+        if text_id:
+            text = Text.objects.filter(id=text_id).first()
+            if text:
+                result = self.process_text(text, prefix, search_type)
+                return Response(result) if result else Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"error": "Text topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+        word = Words.objects.filter(name__iexact=prefix)
+        texts = Text.objects.filter(word__in=word).order_by('pk')
+        text_count = texts.count()
+
         paginator = self.pagination_class()
         result_page = paginator.paginate_queryset(texts, request)
 
@@ -114,25 +126,7 @@ class SearchAndSuffixAPIView(APIView):
         if not results:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return paginator.get_paginated_response({"search_results": results})
-
-
-class SuffixInfoAPIView(APIView):
-    """
-    Qo'shimcha haqida ma'lumot olish.
-    """
-
-    def get(self, request):
-        suffix = request.GET.get('suffix', '').lower()
-        if not suffix:
-            return Response({"error": "Qo'shimcha kiritilishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            suffix_obj = Suffix.objects.get(suffix=suffix)
-            serializer = SuffixSerializer(suffix_obj)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Suffix.DoesNotExist:
-            return Response({"error": "Qo'shimcha topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+        return paginator.get_paginated_response({'text_count': text_count, "search_results": results})
 
 
 # News
@@ -140,7 +134,7 @@ class SuffixInfoAPIView(APIView):
 class NewsListAPIView(ListAPIView):
     queryset = News.objects.all().order_by('-created_at')  # So'nggi qo'shilganlar yuqorida bo'ladi
     serializer_class = NewsListSerializer
-    pagination_class = NewsPagination
+    pagination_class = Pagination
 
 
 class LatestNewsAPIView(APIView):
@@ -150,13 +144,23 @@ class LatestNewsAPIView(APIView):
         return Response(serializer.data)
 
 
-# Havola
+class NewsDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            news = News.objects.get(id=pk)
+            serializer = NewsDetailSerializer(news)
+            return Response(serializer.data)
+        except News.DoesNotExist:
+            return Response({"error": "Yangilik topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Link
 
 
 class UsefulLinkListAPIView(ListAPIView):
     queryset = UsefulLink.objects.all()  # So'nggi qo'shilganlar yuqorida bo'ladi
     serializer_class = UsefulLinkSerializer
-    pagination_class = NewsPagination
+    pagination_class = Pagination
 
 
 class LatestUsefulLinkAPIView(APIView):
@@ -164,3 +168,74 @@ class LatestUsefulLinkAPIView(APIView):
         latest_useful_link = UsefulLink.objects.all()[:6]
         serializer = UsefulLinkSerializer(latest_useful_link, many=True)
         return Response(serializer.data)
+
+
+class UsefulLinkDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            useful_link = UsefulLink.objects.get(id=pk)
+            serializer = UsefulLinkDetailSerializer(useful_link)
+            return Response(serializer.data)
+        except News.DoesNotExist:
+            return Response({"error": "Useful Link topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Employees
+
+class EmployeesListAPIView(ListAPIView):
+    queryset = Employees.objects.all().order_by(
+        F('order').asc(nulls_last=True))  # So'nggi qo'shilganlar yuqorida bo'ladi
+    serializer_class = EmployeesListSerializer
+    pagination_class = Pagination
+
+
+# Top Search
+
+class TopSearchHistoryView(APIView):
+    def get(self, request):
+        # Eng ko'p qidirilgan 10 ta so'zni olish
+        top_search_histories = SearchHistory.objects.filter(word__isnull=False).order_by('-count')[:10]
+        print('salom',top_search_histories)
+
+        results = []
+
+        # Har bir so'zga tegishli bitta textni olish
+        for search_history in top_search_histories:
+            word = search_history.word  # So'z
+            # `Text` modelidan `word`ga bog'liq bo'lgan bitta textni olish
+            text = Text.objects.filter(word=word).first()
+
+            if text:
+                # So'z va tegishli textni natijaga qo'shish
+                results.append({
+                    'word': word.name,
+                    'count': search_history.count,
+                    'text': text.content[:150],  # Yoki textda qanday ma'lumot kerakligini chiqarish
+                })
+            else:
+                # Agar `Text` topilmasa, faqat so'zni chiqarish
+                results.append({
+                    'word': word.name,
+                    'count': search_history.count,
+                    'text': None,
+                })
+
+        return Response({'top_search_histories': results})
+
+
+def save_search_history(prefix):
+    try:
+        # So'zni topish
+        word = Words.objects.get(name=prefix.lower())
+        search_history, created = SearchHistory.objects.get_or_create(word=word)
+    except Words.DoesNotExist:
+        # So'z mavjud bo'lmasa, missing_word bilan saqlash
+        search_history, created = SearchHistory.objects.get_or_create(missing_word=prefix)
+
+    if created:
+        search_history.count = 1  # Yangi tarix yaratganda, count 1
+    else:
+        # Agar so'z allaqon mavjud bo'lsa, count qiymatini oshiramiz
+        search_history.count = F('count') + 1
+
+    search_history.save()
