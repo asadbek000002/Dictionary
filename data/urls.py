@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SearchAndSuffixAPIView, NewsListAPIView, LatestNewsAPIView, \
     UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, UsefulLinkDetailAPIView, EmployeesListAPIView, \
-    TopSearchHistoryView, RegionStatisticsAPIView
+    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView
 
 urlpatterns = [
     # text
@@ -25,5 +25,8 @@ urlpatterns = [
 
     # Region Statistic
     path('api/regions/statistics/', RegionStatisticsAPIView.as_view(), name='region-statistics'),
+
+    # Contact
+    path('api/contact/create/', ContactCreateView.as_view(), name='contact-create'),
 
 ]

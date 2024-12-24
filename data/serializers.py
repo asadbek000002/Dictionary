@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Text, Suffix, News, UsefulLink, Employees, Regions
+from .models import Text, Suffix, News, UsefulLink, Employees, Regions, Contact
 
 
 # News
@@ -29,6 +29,7 @@ class UsefulLinkDetailSerializer(serializers.ModelSerializer):
         model = UsefulLink
         fields = ['id', 'title', 'image', 'text', 'link']
 
+
 # Employees
 
 class EmployeesListSerializer(serializers.ModelSerializer):
@@ -45,3 +46,12 @@ class RegionStatisticsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Regions
         fields = ['id', 'name', 'word_count']
+
+
+# Contact
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = ['id', 'full_name', 'phone', 'message', 'created_at']
+        read_only_fields = ['id', 'created_at']

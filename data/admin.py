@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory
+from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory, Contact
 
 
 class RegionsAdmin(admin.ModelAdmin):
@@ -64,6 +64,11 @@ class SearchHistoryAdmin(admin.ModelAdmin):
     get_word_name.short_description = 'Word/Missing Word'  # Admin panelda chiqadigan nom
 
 
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('full_name', 'phone', 'created_at')
+    search_fields = ('full_name', 'phone',)
+    list_filter = ('created_at',)
+
 # Register models with the admin site
 admin.site.register(Regions, RegionsAdmin)
 admin.site.register(Words, WordsAdmin)
@@ -73,3 +78,4 @@ admin.site.register(News, NewsAdmin)
 admin.site.register(UsefulLink, UsefulLinkAdmin)
 admin.site.register(Employees, EmployeesAdmin)
 admin.site.register(SearchHistory, SearchHistoryAdmin)
+admin.site.register(Contact, ContactAdmin)

@@ -91,9 +91,12 @@ class Employees(models.Model):
     order = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.full_name
+
 
 class SearchHistory(models.Model):
-    word = models.ForeignKey(Words, on_delete=models.SET_NULL, null=True,)
+    word = models.ForeignKey(Words, on_delete=models.SET_NULL, null=True, )
     missing_word = models.CharField(max_length=250)
     count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -102,3 +105,13 @@ class SearchHistory(models.Model):
         if self.word:
             return f"{self.word.name} - {self.count} ta qidirilgan"
         return f"{self.missing_word} - {self.count} ta qidirilgan"
+
+
+class Contact(models.Model):
+    full_name = models.CharField(max_length=50)
+    phone = models.CharField(max_length=13)
+    message = models.TextField(max_length=10000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.phone

@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, F, Count
-from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions
+from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
-    EmployeesListSerializer, RegionStatisticsSerializer
+    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer
 
 
 class Pagination(PageNumberPagination):
@@ -249,3 +249,10 @@ class RegionStatisticsAPIView(ListAPIView):
 
     def get_queryset(self):
         return Regions.objects.annotate(word_count=Count('words'))
+
+
+# Contact
+
+class ContactCreateView(CreateAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
