@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SearchAndSuffixAPIView, NewsListAPIView, LatestNewsAPIView, \
     UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, UsefulLinkDetailAPIView, EmployeesListAPIView, \
-    TopSearchHistoryView
+    TopSearchHistoryView, RegionStatisticsAPIView
 
 urlpatterns = [
     # text
@@ -22,5 +22,8 @@ urlpatterns = [
 
     # Top Search History
     path('api/top-search/', TopSearchHistoryView.as_view(), name='top-search'),
+
+    # Region Statistic
+    path('api/regions/statistics/', RegionStatisticsAPIView.as_view(), name='region-statistics'),
 
 ]

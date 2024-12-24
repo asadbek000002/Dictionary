@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Text, Suffix, News, UsefulLink, Employees
+from .models import Text, Suffix, News, UsefulLink, Employees, Regions
 
 
 # News
@@ -35,3 +35,13 @@ class EmployeesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employees
         fields = ['id', 'full_name', 'image', 'info_text', 'degree', 'position', 'order']
+
+
+# Region Statistic
+
+class RegionStatisticsSerializer(serializers.ModelSerializer):
+    word_count = serializers.IntegerField()
+
+    class Meta:
+        model = Regions
+        fields = ['id', 'name', 'word_count']

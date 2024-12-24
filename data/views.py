@@ -3,10 +3,10 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q, F
-from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory
+from django.db.models import Q, F, Count
+from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
-    EmployeesListSerializer
+    EmployeesListSerializer, RegionStatisticsSerializer
 
 
 class Pagination(PageNumberPagination):
@@ -77,6 +77,7 @@ class SearchAndSuffixAPIView(APIView):
 
         return {
             "id": text.id,
+            "source": text.source,
             "content": text.content,
             "matches": matches
         }
@@ -195,7 +196,7 @@ class TopSearchHistoryView(APIView):
     def get(self, request):
         # Eng ko'p qidirilgan 10 ta so'zni olish
         top_search_histories = SearchHistory.objects.filter(word__isnull=False).order_by('-count')[:10]
-        print('salom',top_search_histories)
+        print('salom', top_search_histories)
 
         results = []
 
@@ -239,3 +240,12 @@ def save_search_history(prefix):
         search_history.count = F('count') + 1
 
     search_history.save()
+
+
+# Region Statistic
+
+class RegionStatisticsAPIView(ListAPIView):
+    serializer_class = RegionStatisticsSerializer
+
+    def get_queryset(self):
+        return Regions.objects.annotate(word_count=Count('words'))

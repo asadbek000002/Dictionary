@@ -27,6 +27,7 @@ class Words(models.Model):
 
 
 class Text(models.Model):
+    source = models.CharField(max_length=255)
     content = models.TextField()
     word = models.ForeignKey(Words, on_delete=models.SET_NULL, null=True, related_name='text')
     created_at = models.DateTimeField(auto_now_add=True)
