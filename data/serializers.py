@@ -36,7 +36,7 @@ class UsefulLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UsefulLink
-        fields = ['id', 'image', 'title', 'last_title', 'text', 'created_at']
+        fields = ['id', 'image', 'title', 'last_title', 'text', 'created_at', 'link']
 
     def get_image(self, obj):
         request = self.context.get('request')
