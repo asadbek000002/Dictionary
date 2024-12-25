@@ -31,14 +31,23 @@ class NewsDetailSerializer(serializers.ModelSerializer):
 # UsefulLink
 
 class UsefulLinkSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    text = serializers.SerializerMethodField()
+
     class Meta:
         model = UsefulLink
-        fields = ['id', 'title', 'image', 'link']
+        fields = ['id', 'image', 'title', 'last_title', 'text', 'created_at']
 
     def get_image(self, obj):
         request = self.context.get('request')
         if obj.image:
             return request.build_absolute_uri(obj.image.url)
+        return None
+
+    def get_text(self, obj):
+        # Faqat 100 ta belgi oling, ortidan "..." qo'shiladi agar uzunroq bo'lsa
+        if obj.text:
+            return obj.text[:100] + "..." if len(obj.text) > 100 else obj.text
         return None
 
 

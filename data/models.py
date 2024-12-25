@@ -69,6 +69,7 @@ class News(models.Model):
 
 class UsefulLink(models.Model):
     title = models.CharField(max_length=150)
+    last_title = models.CharField(max_length=150)
     text = models.TextField(max_length=20000)
     link = models.URLField(max_length=500, blank=True, null=True)
     image = models.ImageField(upload_to='news/')
