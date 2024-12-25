@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory, Contact
+from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory, Contact, Publications
 
 
 class RegionsAdmin(admin.ModelAdmin):
@@ -69,6 +69,12 @@ class ContactAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'phone',)
     list_filter = ('created_at',)
 
+
+class PublicationsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'created_at')
+    search_fields = ('title',)
+    list_filter = ('created_at',)
+
 # Register models with the admin site
 admin.site.register(Regions, RegionsAdmin)
 admin.site.register(Words, WordsAdmin)
@@ -79,3 +85,4 @@ admin.site.register(UsefulLink, UsefulLinkAdmin)
 admin.site.register(Employees, EmployeesAdmin)
 admin.site.register(SearchHistory, SearchHistoryAdmin)
 admin.site.register(Contact, ContactAdmin)
+admin.site.register(Publications, PublicationsAdmin)
