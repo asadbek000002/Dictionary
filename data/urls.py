@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SearchAndSuffixAPIView, NewsListAPIView, LatestNewsAPIView, \
     UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, UsefulLinkDetailAPIView, EmployeesListAPIView, \
-    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, PublicationsDetailAPIView, \
+    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, \
     EmployeesDetailAPIView
 
 urlpatterns = [
@@ -33,6 +33,4 @@ urlpatterns = [
 
     # Publications
     path('api/publications/', PublicationsAPIView.as_view(), name='publications-list'),
-    path('api/publications/<int:pk>/', PublicationsDetailAPIView.as_view(), name='publications-detail'),
-
 ]

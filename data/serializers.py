@@ -102,7 +102,7 @@ class ContactSerializer(serializers.ModelSerializer):
 class PublicationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publications
-        fields = ['id', 'title', 'image']
+        fields = ['id', 'title', 'image', 'file']
 
     def get_image(self, obj):
         request = self.context.get('request')
@@ -110,20 +110,3 @@ class PublicationsSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image.url)
         return None
 
-
-class PublicationDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Publications
-        fields = ['id', 'title', 'image', 'text', 'file']
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if obj.image:
-            return request.build_absolute_uri(obj.image.url)
-        return None
-
-    def get_file(self, obj):
-        request = self.context.get('request')
-        if obj.file:
-            return request.build_absolute_uri(obj.file.url)
-        return None

@@ -6,8 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, F, Count
 from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
-    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, \
-    PublicationDetailSerializer, EmployeesDetailSerializer
+    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, EmployeesDetailSerializer
 
 
 class Pagination(PageNumberPagination):
@@ -276,13 +275,3 @@ class PublicationsAPIView(APIView):
         latest_useful_link = Publications.objects.all()
         serializer = PublicationsSerializer(latest_useful_link, many=True, context={"request": request})
         return Response(serializer.data)
-
-
-class PublicationsDetailAPIView(APIView):
-    def get(self, request, pk):
-        try:
-            publications = Publications.objects.get(id=pk)
-            serializer = PublicationDetailSerializer(publications, context={"request": request})
-            return Response(serializer.data)
-        except Publications.DoesNotExist:
-            return Response({"error": "Useful Link topilmadi."}, status=status.HTTP_404_NOT_FOUND)
