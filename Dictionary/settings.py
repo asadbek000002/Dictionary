@@ -156,7 +156,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8003', 'https://dictionary.uzfati.uz']
 CORS_ALLOWED_ORIGINS = [
-    'https://dictionary.uzfati.uz/',
+    'https://dictionary.uzfati.uz',
     'http://localhost:5173',
 ]
 
