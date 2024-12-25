@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Text, Suffix, News, UsefulLink, Employees, Regions, Contact
+from .models import Text, Suffix, News, UsefulLink, Employees, Regions, Contact, Publications
 
 
 # News
@@ -9,11 +9,23 @@ class NewsListSerializer(serializers.ModelSerializer):
         model = News
         fields = ['id', 'title', 'image', 'created_at']
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
 
 class NewsDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
         fields = ['id', 'title', 'image', 'text', 'created_at']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
 
 
 # UsefulLink
@@ -23,16 +35,34 @@ class UsefulLinkSerializer(serializers.ModelSerializer):
         model = UsefulLink
         fields = ['id', 'title', 'image', 'link']
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
 
 class UsefulLinkDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsefulLink
         fields = ['id', 'title', 'image', 'text', 'link']
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
 
 # Employees
 
 class EmployeesListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employees
+        fields = ['id', 'full_name', 'image', 'degree', 'position', 'order']
+
+
+class EmployeesDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employees
         fields = ['id', 'full_name', 'image', 'info_text', 'degree', 'position', 'order']
@@ -55,3 +85,36 @@ class ContactSerializer(serializers.ModelSerializer):
         model = Contact
         fields = ['id', 'full_name', 'phone', 'message', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+# Publications
+
+
+class PublicationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Publications
+        fields = ['id', 'title', 'image']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
+
+class PublicationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Publications
+        fields = ['id', 'title', 'image', 'text', 'file']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
+    def get_file(self, obj):
+        request = self.context.get('request')
+        if obj.file:
+            return request.build_absolute_uri(obj.file.url)
+        return None

@@ -4,9 +4,10 @@ from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, F, Count
-from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact
+from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
-    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer
+    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, \
+    PublicationDetailSerializer, EmployeesDetailSerializer
 
 
 class Pagination(PageNumberPagination):
@@ -141,7 +142,7 @@ class NewsListAPIView(ListAPIView):
 class LatestNewsAPIView(APIView):
     def get(self, request):
         latest_news = News.objects.all().order_by('-created_at')[:6]
-        serializer = NewsListSerializer(latest_news, many=True)
+        serializer = NewsListSerializer(latest_news, many=True, context={"request": request})
         return Response(serializer.data)
 
 
@@ -149,7 +150,7 @@ class NewsDetailAPIView(APIView):
     def get(self, request, pk):
         try:
             news = News.objects.get(id=pk)
-            serializer = NewsDetailSerializer(news)
+            serializer = NewsDetailSerializer(news, context={"request": request})
             return Response(serializer.data)
         except News.DoesNotExist:
             return Response({"error": "Yangilik topilmadi."}, status=status.HTTP_404_NOT_FOUND)
@@ -167,7 +168,7 @@ class UsefulLinkListAPIView(ListAPIView):
 class LatestUsefulLinkAPIView(APIView):
     def get(self, request):
         latest_useful_link = UsefulLink.objects.all()[:6]
-        serializer = UsefulLinkSerializer(latest_useful_link, many=True)
+        serializer = UsefulLinkSerializer(latest_useful_link, many=True, context={"request": request})
         return Response(serializer.data)
 
 
@@ -175,9 +176,9 @@ class UsefulLinkDetailAPIView(APIView):
     def get(self, request, pk):
         try:
             useful_link = UsefulLink.objects.get(id=pk)
-            serializer = UsefulLinkDetailSerializer(useful_link)
+            serializer = UsefulLinkDetailSerializer(useful_link, context={"request": request})
             return Response(serializer.data)
-        except News.DoesNotExist:
+        except UsefulLink.DoesNotExist:
             return Response({"error": "Useful Link topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -188,6 +189,16 @@ class EmployeesListAPIView(ListAPIView):
         F('order').asc(nulls_last=True))  # So'nggi qo'shilganlar yuqorida bo'ladi
     serializer_class = EmployeesListSerializer
     pagination_class = Pagination
+
+
+class EmployeesDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            employees = Employees.objects.get(id=pk)
+            serializer = EmployeesDetailSerializer(employees, context={"request": request})
+            return Response(serializer.data)
+        except Employees.DoesNotExist:
+            return Response({"error": "employees topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Top Search
@@ -256,3 +267,22 @@ class RegionStatisticsAPIView(ListAPIView):
 class ContactCreateView(CreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
+
+
+# Publications
+
+class PublicationsAPIView(APIView):
+    def get(self, request):
+        latest_useful_link = Publications.objects.all()
+        serializer = PublicationsSerializer(latest_useful_link, many=True, context={"request": request})
+        return Response(serializer.data)
+
+
+class PublicationsDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            publications = Publications.objects.get(id=pk)
+            serializer = PublicationDetailSerializer(publications, context={"request": request})
+            return Response(serializer.data)
+        except Publications.DoesNotExist:
+            return Response({"error": "Useful Link topilmadi."}, status=status.HTTP_404_NOT_FOUND)
