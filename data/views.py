@@ -24,16 +24,20 @@ class SearchAndSuffixAPIView(APIView):
         """
         suffix_objs = []  # Topilgan barcha qo'shimchalar
         root = word  # So'zning boshlang'ich holati
+
         while root:  # So'zni oxirigacha tekshirish
-            matched = False
+            matched_suffix = None
+
             for suffix in Suffix.objects.all():
                 if root.endswith(suffix.suffix):  # Agar so'z qo'shimchani tugatsa
-                    suffix_objs.append(suffix)  # Qo'shimchani qo'shish
-                    root = root[:-len(suffix.suffix)]  # Ildizni yangilash (qo'shimchani olib tashlash)
-                    matched = True
-                    break  # Birinchi mos qo'shimchani topgandan so'ng davom etish
+                    # Eng uzun mos keluvchi qo'shimchani tanlash
+                    if not matched_suffix or len(suffix.suffix) > len(matched_suffix.suffix):
+                        matched_suffix = suffix
 
-            if not matched:
+            if matched_suffix:
+                suffix_objs.append(matched_suffix)  # Qo'shimchani qo'shish
+                root = root[:-len(matched_suffix.suffix)]  # Ildizni yangilash (qo'shimchani olib tashlash)
+            else:
                 break  # Qo'shimcha topilmasa, davom etishni to'xtatish
 
         # Agar hech qanday qo'shimcha topilmasa, to'liq so'zni ildiz sifatida qaytaramiz
