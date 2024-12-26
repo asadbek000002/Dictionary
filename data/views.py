@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, F, Count
 from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications
-from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkDetailSerializer, \
-    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, EmployeesDetailSerializer
+from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkLatestSerializer, \
+    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, TextDetailSerializer
 
 
 class Pagination(PageNumberPagination):
@@ -166,19 +166,13 @@ class UsefulLinkListAPIView(ListAPIView):
 
 class LatestUsefulLinkAPIView(APIView):
     def get(self, request):
-        latest_useful_link = UsefulLink.objects.all()[:6]
-        serializer = UsefulLinkSerializer(latest_useful_link, many=True, context={"request": request})
-        return Response(serializer.data)
-
-
-class UsefulLinkDetailAPIView(APIView):
-    def get(self, request, pk):
-        try:
-            useful_link = UsefulLink.objects.get(id=pk)
-            serializer = UsefulLinkDetailSerializer(useful_link, context={"request": request})
-            return Response(serializer.data)
-        except UsefulLink.DoesNotExist:
-            return Response({"error": "Useful Link topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+        latest_useful_link = UsefulLink.objects.all()[:4]
+        total_count = UsefulLink.objects.count()
+        serializer = UsefulLinkLatestSerializer(latest_useful_link, many=True, context={"request": request})
+        return Response({
+            "count": total_count,
+            "latest_useful_links": serializer.data
+        })
 
 
 # Employees
@@ -188,16 +182,6 @@ class EmployeesListAPIView(ListAPIView):
         F('order').asc(nulls_last=True))  # So'nggi qo'shilganlar yuqorida bo'ladi
     serializer_class = EmployeesListSerializer
     pagination_class = Pagination
-
-
-class EmployeesDetailAPIView(APIView):
-    def get(self, request, pk):
-        try:
-            employees = Employees.objects.get(id=pk)
-            serializer = EmployeesDetailSerializer(employees, context={"request": request})
-            return Response(serializer.data)
-        except Employees.DoesNotExist:
-            return Response({"error": "employees topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Top Search
@@ -219,6 +203,7 @@ class TopSearchHistoryView(APIView):
             if text:
                 # So'z va tegishli textni natijaga qo'shish
                 results.append({
+                    'text_id': text.id,
                     'word': word.name,
                     'count': search_history.count,
                     'text': text.content[:150],  # Yoki textda qanday ma'lumot kerakligini chiqarish
@@ -250,6 +235,16 @@ def save_search_history(prefix):
         search_history.count = F('count') + 1
 
     search_history.save()
+
+
+class TopSearchDetailAPIView(APIView):
+    def get(self, request, pk):
+        try:
+            news = Text.objects.get(id=pk)
+            serializer = TextDetailSerializer(news, context={"request": request})
+            return Response(serializer.data)
+        except Text.DoesNotExist:
+            return Response({"error": "text topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Region Statistic

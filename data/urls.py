@@ -1,8 +1,7 @@
 from django.urls import path
 from .views import SearchAndSuffixAPIView, NewsListAPIView, LatestNewsAPIView, \
-    UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, UsefulLinkDetailAPIView, EmployeesListAPIView, \
-    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, \
-    EmployeesDetailAPIView
+    UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, EmployeesListAPIView, \
+    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, TopSearchDetailAPIView
 
 urlpatterns = [
     # text
@@ -16,14 +15,13 @@ urlpatterns = [
     # link
     path('api/useful-link/latest/', LatestUsefulLinkAPIView.as_view(), name='latest-useful-link'),
     path('api/useful-link/', UsefulLinkListAPIView.as_view(), name='useful-link-list'),
-    path('api/useful-link/<int:pk>/', UsefulLinkDetailAPIView.as_view(), name='useful-link-detail'),
 
     # Employees
     path('api/employees/', EmployeesListAPIView.as_view(), name='news-list'),
-    path('api/employees/<int:pk>/', EmployeesDetailAPIView.as_view(), name='news-detail'),
 
     # Top Search History
     path('api/top-search/', TopSearchHistoryView.as_view(), name='top-search'),
+    path('api/top-search/<int:pk>/', TopSearchDetailAPIView.as_view(), name='text-detail'),
 
     # Region Statistic
     path('api/regions/statistics/', RegionStatisticsAPIView.as_view(), name='region-statistics'),

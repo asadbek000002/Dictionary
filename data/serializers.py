@@ -51,10 +51,10 @@ class UsefulLinkSerializer(serializers.ModelSerializer):
         return None
 
 
-class UsefulLinkDetailSerializer(serializers.ModelSerializer):
+class UsefulLinkLatestSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsefulLink
-        fields = ['id', 'title', 'image', 'text', 'link']
+        fields = ['id', 'title', 'image', 'link']
 
     def get_image(self, obj):
         request = self.context.get('request')
@@ -69,12 +69,6 @@ class EmployeesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employees
         fields = ['id', 'full_name', 'image', 'degree', 'position', 'order']
-
-
-class EmployeesDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Employees
-        fields = ['id', 'full_name', 'image', 'info_text', 'degree', 'position', 'order']
 
 
 # Region Statistic
@@ -110,3 +104,17 @@ class PublicationsSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image.url)
         return None
 
+
+# Text
+
+class TextDetailSerializer(serializers.ModelSerializer):
+    word_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Text
+        fields = ['id', 'source', 'content', 'word_name', 'created_at']
+
+    def get_word_name(self, obj):
+        if obj.word:
+            return obj.word.name  # `Words` modelidagi `name` maydoni
+        return None  # Agar `word` bo'sh bo'lsa, `None` qaytariladi
