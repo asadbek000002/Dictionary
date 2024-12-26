@@ -226,7 +226,7 @@ class TopSearchHistoryView(APIView):
 def save_search_history(prefix):
     try:
         # So'zni topish
-        word = Words.objects.get(name=prefix.lower())
+        word = Words.objects.filter(name=prefix.lower()).first()
         search_history, created = SearchHistory.objects.get_or_create(word=word)
     except Words.DoesNotExist:
         # So'z mavjud bo'lmasa, missing_word bilan saqlash
