@@ -7,6 +7,7 @@ from django.db.models import Q, F, Count
 from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkLatestSerializer, \
     EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, TextDetailSerializer
+import re
 
 
 class Pagination(PageNumberPagination):
@@ -51,13 +52,15 @@ class SearchAndSuffixAPIView(APIView):
         Matnni tahlil qilish va so'zlarni ajratish, har bir so'zga qo'shimchalarni aniqlash.
         """
         matches = []
-        words = text.content.split()
-        for word in words:
-            start_idx = text.content.lower().find(word.lower())
-            end_idx = start_idx + len(word)
-            # word_count += 1
+        # Matndagi barcha so'zlarni tartib bilan olish
+        word_matches = re.finditer(r'\b\w+\b', text.content)
 
-            if search_type == "token" and word.lower().startswith(prefix):
+        for match in word_matches:
+            word = match.group()  # So'zning o'zi
+            start_idx = match.start()  # So'zning boshlanish indeksi
+            end_idx = match.end()  # So'zning tugash indeksi
+
+            if search_type == "token" and word.lower().startswith(prefix.lower()):
                 # Token qidiruvi: prefix bilan boshlanadigan so'zlarni tekshirish
                 suffix_info = self.get_suffix_info(word)
 
@@ -68,11 +71,11 @@ class SearchAndSuffixAPIView(APIView):
                     "root": suffix_info['root'],  # Faqat ildizni qaytarish
                     "suffixes": suffix_info['suffixes'],  # Barcha qo'shimchalarni qaytarish
                 })
-            elif search_type == "lemma" and word.lower() == prefix:
+            elif search_type == "lemma" and word.lower() == prefix.lower():
                 matches.append({
                     "word": word,
-                    # "start_idx": start_idx,
-                    # "end_idx": end_idx,
+                    "start_idx": start_idx,
+                    "end_idx": end_idx,
                 })
 
         # Agar mosliklar bo'lmasa, hech qanday natija qaytarmaymiz
@@ -85,6 +88,27 @@ class SearchAndSuffixAPIView(APIView):
             "content": text.content,
             "matches": matches
         }
+
+    def count_word_occurrences(self, prefix, search_type):
+        """
+        Barcha matnlar bo'ylab qidiruv so'zining umumiy uchrash sonini aniqlash.
+        """
+        total_count = 0
+
+        # Text obyektlarining barchasini olish
+        texts = Text.objects.all()
+
+        for text in texts:
+            word_matches = re.finditer(r'\b\w+\b', text.content)
+
+            for match in word_matches:
+                word = match.group()
+                if search_type == "token" and word.lower().startswith(prefix.lower()):
+                    total_count += 1  # Prefiks bilan mos kelgan so'zni hisoblash
+                elif search_type == "lemma" and word.lower() == prefix.lower():
+                    total_count += 1  # To'liq mos kelgan so'zni hisoblash
+
+        return total_count
 
     def get(self, request):
         """
@@ -114,8 +138,11 @@ class SearchAndSuffixAPIView(APIView):
             else:
                 return Response({"error": "Text topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
-        word = Words.objects.filter(name__iexact=prefix)
-        texts = Text.objects.filter(word__in=word).order_by('pk')
+        word = Words.objects.filter(name__iexact=prefix).first()  # Bitta obyektni oladi
+        if not word:
+            return Response({"error": "So'z topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+        texts = Text.objects.filter(word=word).order_by('pk')
         text_count = texts.count()
 
         paginator = self.pagination_class()
@@ -131,7 +158,19 @@ class SearchAndSuffixAPIView(APIView):
         if not results:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return paginator.get_paginated_response({'text_count': text_count, "search_results": results})
+        total_occurrences = self.count_word_occurrences(prefix, search_type)
+
+        return paginator.get_paginated_response({
+            "word_details": {
+                "name": word.name,
+                "grammatical_description": word.grammatical_description,
+                "lexical_form": word.lexical_form,
+                "comment": word.comment,
+            },
+            "text_count": text_count,
+            "total_occurrences": total_occurrences,
+            "search_results": results
+        })
 
 
 # News

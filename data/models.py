@@ -15,6 +15,9 @@ class Regions(models.Model):
 
 class Words(models.Model):
     name = models.CharField(max_length=250)
+    grammatical_description = models.TextField(max_length=1000)
+    lexical_form = models.TextField(max_length=1000)
+    comment = models.TextField(max_length=1000)
     region = models.ForeignKey(Regions, on_delete=models.SET_NULL, null=True, related_name='words')
     created_at = models.DateTimeField(auto_now_add=True)
 
