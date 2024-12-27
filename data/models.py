@@ -1,4 +1,5 @@
 from django.db import models
+from ckeditor.fields import RichTextField
 
 
 class Regions(models.Model):
@@ -130,3 +131,37 @@ class Publications(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class About(models.Model):
+    phone = models.CharField(max_length=13)
+    email = models.EmailField()
+    location_name = models.CharField(max_length=255)
+    location_link = models.URLField()
+
+    def __str__(self):
+        return self.phone
+
+
+class CategoryProject(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Kategoriyaning nomi")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Category Project"
+        verbose_name_plural = "Category Projects"
+
+
+class AboutProject(models.Model):
+    category = models.ForeignKey(CategoryProject, on_delete=models.CASCADE, related_name="loyhalar", verbose_name="Kategoriya")
+    tasnif = RichTextField(verbose_name="Loyha tasnifi (Qollanma)", help_text="Loyha haqida to'liq qollanma yozing",
+                           blank=True)
+
+    def __str__(self):
+        return f"Loyha: {self.category.name}"
+
+    class Meta:
+        verbose_name = "About Project"
+        verbose_name_plural = "About Projects"

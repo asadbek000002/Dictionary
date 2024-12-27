@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import SearchAndSuffixAPIView, NewsListAPIView, LatestNewsAPIView, \
     UsefulLinkListAPIView, LatestUsefulLinkAPIView, NewsDetailAPIView, EmployeesListAPIView, \
-    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, TopSearchDetailAPIView
+    TopSearchHistoryView, RegionStatisticsAPIView, ContactCreateView, PublicationsAPIView, TopSearchDetailAPIView, \
+    LatestAboutAPIView, CategoryListAPIView, CategoryDetailAPIView
 
 urlpatterns = [
     # text
@@ -28,7 +29,12 @@ urlpatterns = [
 
     # Contact
     path('api/contact/create/', ContactCreateView.as_view(), name='contact-create'),
+    path('api/contact/about/', LatestAboutAPIView.as_view(), name='about_latest'),
 
     # Publications
     path('api/publications/', PublicationsAPIView.as_view(), name='publications-list'),
+
+    # About Project
+    path('api/project/categories/', CategoryListAPIView.as_view(), name='category-list'),  # Barcha kategoriyalar
+    path('api/project/category/<int:pk>/', CategoryDetailAPIView.as_view(), name='category-detail'),  # Tanlangan kategoriya
 ]

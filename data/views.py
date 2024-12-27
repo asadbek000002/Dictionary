@@ -1,12 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, F, Count
-from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications
+from .models import Text, Suffix, News, UsefulLink, Words, Employees, SearchHistory, Regions, Contact, Publications, \
+    About, CategoryProject
 from .serializers import NewsListSerializer, UsefulLinkSerializer, NewsDetailSerializer, UsefulLinkLatestSerializer, \
-    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, TextDetailSerializer
+    EmployeesListSerializer, RegionStatisticsSerializer, ContactSerializer, PublicationsSerializer, \
+    TextDetailSerializer, AboutSerializer, CategoryProjectSerializer, CategoryProjectDetailSerializer
 import re
 
 
@@ -129,19 +131,24 @@ class SearchAndSuffixAPIView(APIView):
         if prefix:
             save_search_history(prefix)  # Qidiruv so'zini saqlash
 
-        # Agar bitta textni olishni xohlasangiz
         if text_id:
             text = Text.objects.filter(id=text_id).first()
             if text:
+                word = text.word
+                word_details = self.get_word_details(word)
                 result = self.process_text(text, prefix, search_type)
-                return Response(result) if result else Response(status=status.HTTP_204_NO_CONTENT)
+                if result:
+                    result = {"word_details": word_details, **result}
+                    return Response(result)
+                else:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
             else:
                 return Response({"error": "Text topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
         word = Words.objects.filter(name__iexact=prefix).first()  # Bitta obyektni oladi
         if not word:
             return Response({"error": "So'z topilmadi."}, status=status.HTTP_404_NOT_FOUND)
-
+        word_details = self.get_word_details(word)
         texts = Text.objects.filter(word=word).order_by('pk')
         text_count = texts.count()
 
@@ -161,16 +168,21 @@ class SearchAndSuffixAPIView(APIView):
         total_occurrences = self.count_word_occurrences(prefix, search_type)
 
         return paginator.get_paginated_response({
-            "word_details": {
-                "name": word.name,
-                "grammatical_description": word.grammatical_description,
-                "lexical_form": word.lexical_form,
-                "comment": word.comment,
-            },
+            "word_details": word_details,
             "text_count": text_count,
             "total_occurrences": total_occurrences,
             "search_results": results
         })
+
+    def get_word_details(self, word):
+        if not word:
+            return None
+        return {
+            "name": word.name,
+            "grammatical_description": word.grammatical_description,
+            "lexical_form": word.lexical_form,
+            "comment": word.comment,
+        }
 
 
 # News
@@ -211,9 +223,10 @@ class LatestUsefulLinkAPIView(APIView):
     def get(self, request):
         latest_useful_link = UsefulLink.objects.all()[:4]
         total_count = UsefulLink.objects.count()
+        remaining_count = max(total_count - 4, 0)
         serializer = UsefulLinkLatestSerializer(latest_useful_link, many=True, context={"request": request})
         return Response({
-            "count": total_count,
+            "count": remaining_count,
             "latest_useful_links": serializer.data
         })
 
@@ -232,29 +245,25 @@ class EmployeesListAPIView(ListAPIView):
 class TopSearchHistoryView(APIView):
     def get(self, request):
         # Eng ko'p qidirilgan 10 ta so'zni olish
-        top_search_histories = SearchHistory.objects.filter(word__isnull=False).order_by('-count')[:10]
-        print('salom', top_search_histories)
+        top_search_histories = SearchHistory.objects.filter(word__isnull=False).exclude(word=None).order_by('-count')[
+                               :10]
 
         results = []
 
         # Har bir so'zga tegishli bitta textni olish
         for search_history in top_search_histories:
             word = search_history.word  # So'z
-            # `Text` modelidan `word`ga bog'liq bo'lgan bitta textni olish
-            text = Text.objects.filter(word=word).first()
-
-            if text:
-                # So'z va tegishli textni natijaga qo'shish
+            if word:
+                text = Text.objects.filter(word=word).first()
                 results.append({
-                    'text_id': text.id,
+                    'text_id': text.id if text else None,
                     'word': word.name,
                     'count': search_history.count,
-                    'text': text.content[:150],  # Yoki textda qanday ma'lumot kerakligini chiqarish
+                    'text': text.content[:150] if text else None,
                 })
             else:
-                # Agar `Text` topilmasa, faqat so'zni chiqarish
                 results.append({
-                    'word': word.name,
+                    'word': None,
                     'count': search_history.count,
                     'text': None,
                 })
@@ -266,18 +275,20 @@ def save_search_history(prefix):
     try:
         # So'zni topish
         word = Words.objects.filter(name=prefix.lower()).first()
-        search_history, created = SearchHistory.objects.get_or_create(word=word)
-    except Words.DoesNotExist:
-        # So'z mavjud bo'lmasa, missing_word bilan saqlash
-        search_history, created = SearchHistory.objects.get_or_create(missing_word=prefix)
 
-    if created:
-        search_history.count = 1  # Yangi tarix yaratganda, count 1
-    else:
-        # Agar so'z allaqon mavjud bo'lsa, count qiymatini oshiramiz
-        search_history.count = F('count') + 1
+        if word:
+            search_history, created = SearchHistory.objects.get_or_create(word=word)
+        else:
+            search_history, created = SearchHistory.objects.get_or_create(missing_word=prefix)
 
-    search_history.save()
+        if created:
+            search_history.count = 1
+        else:
+            search_history.count = F('count') + 1
+
+        search_history.save()
+    except Exception as e:
+        print(f"Xatolik yuz berdi: {e}")
 
 
 class TopSearchDetailAPIView(APIView):
@@ -313,3 +324,22 @@ class PublicationsAPIView(APIView):
         latest_useful_link = Publications.objects.all()
         serializer = PublicationsSerializer(latest_useful_link, many=True, context={"request": request})
         return Response(serializer.data)
+
+
+# About
+class LatestAboutAPIView(RetrieveAPIView):
+    serializer_class = AboutSerializer
+
+    def get_object(self):
+        return About.objects.all().order_by('-id').first()
+
+
+# About Project
+class CategoryListAPIView(ListAPIView):
+    queryset = CategoryProject.objects.all()
+    serializer_class = CategoryProjectSerializer
+
+
+class CategoryDetailAPIView(RetrieveAPIView):
+    queryset = CategoryProject.objects.all()
+    serializer_class = CategoryProjectDetailSerializer

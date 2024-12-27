@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Text, Suffix, News, UsefulLink, Employees, Regions, Contact, Publications
+from .models import Text, Suffix, News, UsefulLink, Employees, Regions, Contact, Publications, \
+    About, CategoryProject, AboutProject
 
 
 # News
@@ -118,3 +119,33 @@ class TextDetailSerializer(serializers.ModelSerializer):
         if obj.word:
             return obj.word.name  # `Words` modelidagi `name` maydoni
         return None  # Agar `word` bo'sh bo'lsa, `None` qaytariladi
+
+
+# About
+class AboutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = About
+        fields = ['id', 'phone', 'email', 'location_name', 'location_link']
+
+
+# About Project
+
+class AboutProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AboutProject
+        fields = ['id', 'tasnif']  # `AboutProject`ning kerakli maydonlari
+
+
+class CategoryProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryProject
+        fields = ['id', 'name']  # `CategoryProject` modelining maydonlari
+
+
+class CategoryProjectDetailSerializer(serializers.ModelSerializer):
+    # `CategoryProject`ga tegishli `AboutProject`larni ko'rsatamiz
+    loyhalar = AboutProjectSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CategoryProject
+        fields = ['id', 'name', 'loyhalar']  # `CategoryProject` modelining maydonlari

@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory, Contact, Publications
+from .models import Regions, Words, Text, Suffix, News, UsefulLink, Employees, SearchHistory, Contact, \
+    Publications, CategoryProject, AboutProject, About
+
+admin.site.register(CategoryProject)
+admin.site.register(AboutProject)
+admin.site.register(About)
 
 
 class RegionsAdmin(admin.ModelAdmin):
