@@ -28,7 +28,6 @@ jobs:
         docker tag dictionary:${{ github.sha }} asadbek2/dictionary:latest
         docker push asadbek2/dictionary:latest
 
-    # 4. Serverga ulanish va Docker containerni ishga tushirish
     - name: Deploy to Server
       uses: appleboy/ssh-action@v1.2.0
       with:
@@ -36,10 +35,10 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
-          # Docker Compose'ni yangilash (docker-compose.yml faylini serverga yuborish)
           echo "Yuborish docker-compose.yml faylini"
-          scp -i ${{ secrets.SERVER_SSH_KEY }} docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/
-
+          # Docker Compose'ni yangilash (docker-compose.yml faylini serverga yuborish)
+          rsync -avz -e "ssh -i ${{ secrets.SERVER_SSH_KEY }}" docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/
+          
           # Docker konteynerlarini ishga tushirish
           cd /home/${{ secrets.SERVER_USER }}
           docker-compose down
