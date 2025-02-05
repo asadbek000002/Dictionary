@@ -2,11 +2,12 @@ version: '3.8'
 
 services:
   web:
-    image: asadbek2/dictionary:latest
+    build: .
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
+      - .:/Lugat
       - static_volume:/Lugat/staticfiles
       - media_volume:/Lugat/mediafiles
     ports:

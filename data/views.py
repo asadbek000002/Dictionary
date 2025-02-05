@@ -246,7 +246,7 @@ class TopSearchHistoryView(APIView):
     def get(self, request):
         # Eng ko'p qidirilgan 10 ta so'zni olish
         top_search_histories = SearchHistory.objects.filter(word__isnull=False).exclude(word=None).order_by('-count')[
-                               :10]
+                               :5]
 
         results = []
 
