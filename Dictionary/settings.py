@@ -154,12 +154,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8003', 'https://subdomain.dialectalcorpus.uz/', 'http://subdomain.dialectalcorpus.uz/']
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8003', 'https://subdomain.dialectalcorpus.uz', 'http://subdomain.dialectalcorpus.uz']
 CORS_ALLOWED_ORIGINS = [
-    'https://subdomain.dialectalcorpus.uz/',
-    'http://subdomain.dialectalcorpus.uz/',
-    'https://dialectalcorpus.uz/',
-    'http://dialectalcorpus.uz/',
+    'https://subdomain.dialectalcorpus.uz',
+    'http://subdomain.dialectalcorpus.uz',
+    'https://dialectalcorpus.uz',
+    'http://dialectalcorpus.uz',
     'http://localhost:5173',
 ]
 
